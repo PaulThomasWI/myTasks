@@ -1,4 +1,6 @@
 var taskIdCounter = 0;
+var aryTasks = [];
+
 var formElement            = document.querySelector("#task-form");
 var listElement            = document.querySelector("#tasks-to-do");
 var pageContentElement     = document.querySelector("#page-content");
@@ -27,6 +29,7 @@ var taskHandler = function (event) {
         var taskDataObj = {
             name: taskNameInput
             , type: taskTypeSelect
+            , status: "to do"
         }
 
         createTaskElement(taskDataObj);        
@@ -38,6 +41,13 @@ var completeEditTask = function(taskName, taskType, taskId) {
 
     taskSelected.querySelector("h3.task-name").textContent = taskName;
     taskSelected.querySelector("span.task-type").textContent = taskType;
+
+    for (index = 0; index < aryTasks.length; index++) {
+        if (aryTasks[index].id === parseInt(taskId)) {
+            aryTasks[index].name = taskName;
+            aryTasks[index].type = taskType;
+        }
+    }
 
     formElement.removeAttribute("data-task-id");
     document.querySelector("#save-task").textContent = "Add Task";
@@ -58,6 +68,9 @@ var createTaskElement = function(taskDataObj) {
 
     listItemElement.appendChild(divElement);
     listElement.appendChild(listItemElement);
+
+    taskDataObj.id = taskIdCounter;
+    aryTasks.push(taskDataObj);
 
     taskIdCounter++;
 }
@@ -118,6 +131,16 @@ var deleteTask = function(taskId) {
 
     document.querySelector("#save-task").textContent = "Add Task";
     formElement.reset();    
+
+    var aryUpdateTasks = [];
+
+    for (index = 0; index < aryTasks.length; index++) {
+        if (aryTasks[index].id !== parseInt(taskId)) {
+            aryUpdateTasks.push(aryTasks[index]);
+        }
+    }
+
+    aryTasks = aryUpdateTasks;
 }
 
 var taskButtonHandler = function(event) {
@@ -143,6 +166,12 @@ var taskStatusChangeHandler = function(event) {
         tasksInProgressElement.appendChild(taskSelected);
     } else if (statusValue === "completed") {
         tasksCompleteElement.appendChild(taskSelected);
+    }
+
+    for (index = 0; index < aryTasks.length; index++) {
+        if (aryTasks[index].id === parseInt(taskId)) {
+            aryTasks[index].status = statusValue;
+        }
     }
 }
 
