@@ -1,6 +1,9 @@
 var taskIdCounter = 0;
-var formElement = document.querySelector("#task-form");
-var listElement = document.querySelector("#tasks-to-do");
+var formElement            = document.querySelector("#task-form");
+var listElement            = document.querySelector("#tasks-to-do");
+var pageContentElement     = document.querySelector("#page-content");
+var tasksInProgressElement = document.querySelector("#tasks-in-progress");
+var tasksCompleteElement   = document.querySelector("#tasks-completed");
 
 var taskHandler = function (event) {
     event.preventDefault();
@@ -15,12 +18,29 @@ var taskHandler = function (event) {
 
     formElement.reset();
     
-    var taskDataObj = {
-        name: taskNameInput
-        , type: taskTypeSelect
-    }
+    var isEdit = formElement.hasAttribute("data-task-id");
 
-    createTaskElement(taskDataObj);
+    if (isEdit) {
+        var taskId = formElement.getAttribute("data-task-id");
+        completeEditTask(taskNameInput, taskTypeSelect, taskId);
+    } else {
+        var taskDataObj = {
+            name: taskNameInput
+            , type: taskTypeSelect
+        }
+
+        createTaskElement(taskDataObj);        
+    }
+}
+
+var completeEditTask = function(taskName, taskType, taskId) {
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+
+    taskSelected.querySelector("h3.task-name").textContent = taskName;
+    taskSelected.querySelector("span.task-type").textContent = taskType;
+
+    formElement.removeAttribute("data-task-id");
+    document.querySelector("#save-task").textContent = "Add Task";
 }
 
 var createTaskElement = function(taskDataObj) {
@@ -69,7 +89,7 @@ var createTaskActions = function(taskId) {
 
     actionContainerElement.appendChild(statusSelectEl);
 
-    var statusChoices = ["To Do", "In Progress", "Complete"];
+    var statusChoices = ["To Do", "In Progress", "Completed"];
     for (index = 0; index < statusChoices.length; index++) {
         var statusOptionEl = document.createElement("option");
         statusOptionEl.textContent = statusChoices[index];
@@ -81,4 +101,51 @@ var createTaskActions = function(taskId) {
     return actionContainerElement;
 }
 
+var editTask = function(taskId) {
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+    var taskName = taskSelected.querySelector("h3.task-name").textContent;
+    var taskType = taskSelected.querySelector("span.task-type").textContent;
+
+    document.querySelector("input[name='task-name']").value  = taskName;
+    document.querySelector("select[name='task-type']").value = taskType;
+    document.querySelector("#save-task").textContent = "Save Task";
+    formElement.setAttribute("data-task-id", taskId);
+}
+
+var deleteTask = function(taskId) {
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+    taskSelected.remove();
+
+    document.querySelector("#save-task").textContent = "Add Task";
+    formElement.reset();    
+}
+
+var taskButtonHandler = function(event) {
+    var targetElement = event.target;
+
+    if (targetElement.matches(".edit-btn")) {
+        var taskId = targetElement.getAttribute("data-task-id");
+        editTask(taskId);
+    } else if (event.target.matches(".delete-btn")) {
+        var taskId = event.target.getAttribute("data-task-id");
+        deleteTask(taskId);
+    }
+}
+
+var taskStatusChangeHandler = function(event) {
+    var taskId = event.target.getAttribute("data-task-id");
+    var statusValue = event.target.value.toLowerCase();
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+
+    if (statusValue === "to do") {
+        listElement.appendChild(taskSelected);
+    } else if (statusValue === "in progress") {
+        tasksInProgressElement.appendChild(taskSelected);
+    } else if (statusValue === "completed") {
+        tasksCompleteElement.appendChild(taskSelected);
+    }
+}
+
 formElement.addEventListener("submit", taskHandler);
+pageContentElement.addEventListener("click", taskButtonHandler);
+pageContentElement.addEventListener("change", taskStatusChangeHandler);
